@@ -1,0 +1,37 @@
+import {Injectable, UnauthorizedException, UnprocessableEntityException} from '@nestjs/common';
+import {UsersRepository} from "./users.repository";
+import {CreateUserDto} from "./dto/create-user.dto";
+import * as bcrypt from "bcryptjs";
+
+@Injectable()
+export class UsersService{
+    constructor(private readonly usersRepository: UsersRepository) {}
+
+    async create(createUserDto: CreateUserDto) {
+        await this.validateCreateUserDto(createUserDto);
+
+        return await this.usersRepository.create({
+            ...createUserDto,
+            password: await bcrypt.hash(createUserDto.password, 10),
+        });
+    }
+
+    private async validateCreateUserDto(createUserDto: CreateUserDto) {
+        try {
+            await this.usersRepository.findOne({email: createUserDto.email});
+        }catch (error) {
+            return error;
+        }
+        throw new UnprocessableEntityException(`User with email ${createUserDto.email} already exists`);
+    }
+
+    async verifyUser(email: string, password: string) {
+        const user = await this.usersRepository.findOne({email: email});
+        const passwordIsValid = await bcrypt.compare(password, user.password);
+
+        if(!passwordIsValid) {
+            throw new UnauthorizedException(`Invalid password`);
+        }
+        return user;
+    }
+}
