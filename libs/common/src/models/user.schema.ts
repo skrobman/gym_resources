@@ -18,14 +18,14 @@ export class UserDocument extends AbstractDocument {
     @Prop({ type: String, enum: Gender })
     gender: Gender;
 
-    @Prop()
-    phone?: string;
+    @Prop({ type: String, default: null })
+    phone?: string | null;
 
-    @Prop()
-    city?: string;
+    @Prop({ type: String, default: null })
+    city?: string | null;
 
-    @Prop()
-    address?: string;
+    @Prop({ type: String, default: null })
+    address?: string | null;
 
 }
 

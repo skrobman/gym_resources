@@ -41,19 +41,19 @@ export class CreateUserDto {
         message:
             'Phone must be a valid PL (+48), BY (+375) or UA (+380) number in E.164 format.',
     })
-    phone?: string;
+    phone?: string | null = null;
 
     @IsOptional()
     @IsString()
     @Length(2, 50, {
         message: 'City must be at least 2 characters and at most 50 characters long.',
     })
-    city?: string;
+    city?: string | null = null;
 
     @IsOptional()
     @IsString()
     @Length(2, 100, {
         message: 'City must be at least 2 characters and at most 100 characters long.',
     })
-    address?: string;
+    address?: string | null = null;
 }

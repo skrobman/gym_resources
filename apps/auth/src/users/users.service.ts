@@ -2,6 +2,7 @@ import {Injectable, UnauthorizedException, UnprocessableEntityException} from '@
 import {UsersRepository} from "./users.repository";
 import {CreateUserDto} from "./dto/create-user.dto";
 import * as bcrypt from "bcryptjs";
+import {GetUserDto} from "./dto/get-user.dto";
 
 @Injectable()
 export class UsersService{
@@ -33,5 +34,9 @@ export class UsersService{
             throw new UnauthorizedException(`Invalid password`);
         }
         return user;
+    }
+
+    async getUser(getUserDto: GetUserDto){
+        return await this.usersRepository.findOne(getUserDto);
     }
 }
