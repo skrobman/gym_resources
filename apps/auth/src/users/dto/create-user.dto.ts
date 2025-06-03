@@ -29,6 +29,7 @@ export class CreateUserDto {
     })
     surname: string;
 
+    @IsNotEmpty({ message: 'Password is required.' })
     @IsStrongPassword()
     password: string;
 
