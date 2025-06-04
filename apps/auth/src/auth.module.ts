@@ -7,7 +7,9 @@ import * as Joi from "joi";
 import {JwtModule} from "@nestjs/jwt";
 import {LocalStrategy} from "./strategies/local.strategy";
 import {JwtStrategy} from "./strategies/jwt.strategy";
-import {JwtAuthGuard} from "./guards/jwt.guard";
+import {MinioModule} from "@app/common/minio/minio.module";
+import {FilesController} from "./files.controller";
+import {FilesService} from "./files.service";
 
 @Module({
   imports: [
@@ -31,9 +33,10 @@ import {JwtAuthGuard} from "./guards/jwt.guard";
       }),
       inject: [ConfigService],
     }),
-    UsersModule
+    UsersModule,
+    MinioModule
   ],
-  controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  controllers: [AuthController, FilesController],
+  providers: [AuthService, LocalStrategy, JwtStrategy, FilesService],
 })
 export class AuthModule {}
