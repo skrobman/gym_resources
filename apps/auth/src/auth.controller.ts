@@ -19,7 +19,7 @@ export class AuthController {
   ){
     const jwt = await this.authService.login(user, response);
 
-    response.send(user);
+    response.send(jwt);
   }
 
 }

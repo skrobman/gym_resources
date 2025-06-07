@@ -28,7 +28,7 @@ export class UsersService{
 
         const uploadedObjectName:string = await this.uploadFile(file);
 
-        const presignedUrl:string = await this.minioService.presignedGetObject(
+        const preSignedUrl:string = await this.minioService.presignedGetObject(
             this._bucketName,
             uploadedObjectName,
             24 * 60 * 60,
@@ -39,7 +39,7 @@ export class UsersService{
             password: await bcrypt.hash(createUserDto.password, 10),
             profile: {
                 ...createUserDto.profile,
-                profile_image: presignedUrl,
+                profile_image: preSignedUrl,
             },
         });
     }

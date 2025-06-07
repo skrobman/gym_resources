@@ -24,7 +24,6 @@ RUN npm ci --omit=dev
 
 COPY --from=build /app/dist ./dist
 
-# В production только собранный JS-код и необходимые зависимости
 ENV NODE_ENV=production
 
 EXPOSE 3000

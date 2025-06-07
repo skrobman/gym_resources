@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {AbstractDocument, Gender} from "@app/common";
 import {Status} from "@app/common/enums/status.enum";
-import {Profile} from "@app/common/models/user-profile.schema";
+import {Profile} from "@app/common/models/user-profile";
 
 @Schema({
     versionKey: false,

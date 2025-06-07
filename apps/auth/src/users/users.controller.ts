@@ -4,6 +4,8 @@ import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtAuthGuard} from "../guards/jwt.guard";
 import {GetUserDto} from "./dto/get-user.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
+import {CurrentUser} from "@app/common/decorators/current-user.decorator";
+import {UserDocument} from "@app/common/models/user.schema";
 
 @Controller('users')
 export class UsersController {
@@ -20,7 +22,7 @@ export class UsersController {
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
-    getProfile(getUserDto: GetUserDto){
-        return this.usersService.getUserProfile(getUserDto)
+    getProfile(@CurrentUser() user: UserDocument){
+        return user;
     }
 }

@@ -8,8 +8,6 @@ import {JwtModule} from "@nestjs/jwt";
 import {LocalStrategy} from "./strategies/local.strategy";
 import {JwtStrategy} from "./strategies/jwt.strategy";
 import {MinioModule} from "@app/common/minio/minio.module";
-import {FilesController} from "./files.controller";
-import {FilesService} from "./files.service";
 
 @Module({
   imports: [
@@ -36,7 +34,7 @@ import {FilesService} from "./files.service";
     UsersModule,
     MinioModule
   ],
-  controllers: [AuthController, FilesController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, FilesService],
+  controllers: [AuthController],
+  providers: [AuthService, LocalStrategy, JwtStrategy],
 })
 export class AuthModule {}
