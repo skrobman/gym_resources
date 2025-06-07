@@ -7,6 +7,8 @@ import {InjectMinio} from "@app/common/decorators/minio.decorator";
 import * as Minio from "minio";
 import {randomUUID} from "crypto";
 import {ConfigService} from "@nestjs/config";
+import {ProfileDto} from "./dto/profile.dto";
+import {ChangeProfileDto} from "./dto/change-profile.dto";
 
 @Injectable()
 export class UsersService{
@@ -87,5 +89,22 @@ export class UsersService{
 
     async getUserProfile(getUserDto: GetUserDto) {
         return await this.usersRepository.findOne(getUserDto);
+    }
+
+    async changeUserProfile(
+        userId: string,
+        changeProfileDto: ChangeProfileDto,
+    ): Promise<ProfileDto> {
+        const setObj: Record<string, any> = {};
+        for (const [key, value] of Object.entries(changeProfileDto)) {
+            setObj[`profile.${key}`] = value;
+        }
+
+        const updatedUser = await this.usersRepository.findOneAndUpdate(
+            { _id: userId },
+            { $set: setObj }
+        );
+
+        return updatedUser.profile as ProfileDto;
     }
 }

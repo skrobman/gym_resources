@@ -1,11 +1,12 @@
-import {Body, Controller, Get, Post, UploadedFile, UseGuards, UseInterceptors} from '@nestjs/common';
+import {Body, Controller, Get, Patch, Post, UploadedFile, UseGuards, UseInterceptors} from '@nestjs/common';
 import {UsersService} from "./users.service";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {JwtAuthGuard} from "../guards/jwt.guard";
-import {GetUserDto} from "./dto/get-user.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {CurrentUser} from "@app/common/decorators/current-user.decorator";
 import {UserDocument} from "@app/common/models/user.schema";
+import {ProfileDto} from "./dto/profile.dto";
+import {ChangeProfileDto} from "./dto/change-profile.dto";
 
 @Controller('users')
 export class UsersController {
@@ -22,7 +23,16 @@ export class UsersController {
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
-    getProfile(@CurrentUser() user: UserDocument){
-        return user;
+    getProfile(@CurrentUser() user: UserDocument): ProfileDto{
+        return user.profile;
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch('profile')
+    changeUserProfile(
+        @CurrentUser() user: UserDocument,
+        @Body() changeProfileDto: ChangeProfileDto,
+    ): Promise<ProfileDto>{
+        return this.usersService.changeUserProfile(user._id.toString(), changeProfileDto);
     }
 }

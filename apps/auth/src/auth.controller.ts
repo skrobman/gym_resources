@@ -1,7 +1,7 @@
 import {Body, Controller, Get, Post, Res, UseGuards} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {LocalAuthGuard} from "./guards/local-auth.guard";
-import {Response} from "express";
+import {json, Response} from "express";
 import {CurrentUser} from "@app/common/decorators/current-user.decorator";
 import {UserDocument} from "@app/common/models/user.schema";
 import {LoginDto} from "./dto/login.dto";
@@ -19,7 +19,7 @@ export class AuthController {
   ){
     const jwt = await this.authService.login(user, response);
 
-    response.send(jwt);
+    response.send({"msg": "Authenticated successfully."});
   }
 
 }
