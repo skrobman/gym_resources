@@ -11,7 +11,7 @@ async function bootstrap() {
     app.useGlobalPipes(
         new ValidationPipe({
             whitelist: true, //Deletes redundant fields
-            forbidNonWhitelisted: true, //Throws an error when the request body contains redundant fields
+            forbidNonWhitelisted: false,
         })
     )
 

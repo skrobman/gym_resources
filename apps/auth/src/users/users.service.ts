@@ -3,27 +3,76 @@ import {UsersRepository} from "./users.repository";
 import {CreateUserDto} from "./dto/create-user.dto";
 import * as bcrypt from "bcryptjs";
 import {GetUserDto} from "./dto/get-user.dto";
+import {InjectMinio} from "@app/common/decorators/minio.decorator";
+import * as Minio from "minio";
+import {randomUUID} from "crypto";
+import {ConfigService} from "@nestjs/config";
 
 @Injectable()
 export class UsersService{
-    constructor(private readonly usersRepository: UsersRepository) {}
+    protected _bucketName:string;
 
-    async create(createUserDto: CreateUserDto) {
+    constructor(
+        private readonly usersRepository: UsersRepository,
+        @InjectMinio() private readonly minioService: Minio.Client,
+        private readonly configService: ConfigService,
+    ) {
+        this._bucketName = this.configService.getOrThrow<string>('MINIO_BUCKET');
+        if (!this._bucketName) {
+            throw new Error('Error with bucket name');
+        }
+    }
+
+    async create(createUserDto: CreateUserDto, file: Express.Multer.File) {
         await this.validateCreateUserDto(createUserDto);
 
+        const uploadedObjectName:string = await this.uploadFile(file);
+
+        const presignedUrl:string = await this.minioService.presignedGetObject(
+            this._bucketName,
+            uploadedObjectName,
+            24 * 60 * 60,
+        );
+
         return await this.usersRepository.create({
-            ...createUserDto,
+            email: createUserDto.email,
             password: await bcrypt.hash(createUserDto.password, 10),
+            profile: {
+                ...createUserDto.profile,
+                profile_image: presignedUrl,
+            },
         });
     }
 
     private async validateCreateUserDto(createUserDto: CreateUserDto) {
-        try {
-            await this.usersRepository.findOne({email: createUserDto.email});
-        }catch (error) {
-            return error;
+        const existingUser = await this.usersRepository.findOne({
+            email: createUserDto.email
+        }).catch(() => undefined);
+
+        if (existingUser) {
+            throw new UnprocessableEntityException(
+                `User with email ${createUserDto.email} already exists`
+            );
         }
-        throw new UnprocessableEntityException(`User with email ${createUserDto.email} already exists`);
+    }
+
+    private async uploadFile(file: Express.Multer.File): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const filename = `${randomUUID().toString()}-${file.originalname}`;
+            this.minioService.putObject(
+                this._bucketName,
+                filename,
+                file.buffer,
+                file.size,
+                (error, objInfo) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(filename);
+                    }
+                },
+            );
+        });
     }
 
     async verifyUser(email: string, password: string) {

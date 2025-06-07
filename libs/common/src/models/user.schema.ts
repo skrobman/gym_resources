@@ -1,32 +1,32 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {AbstractDocument, Gender} from "@app/common";
+import {Status} from "@app/common/enums/status.enum";
+import {Profile} from "@app/common/models/user-profile.schema";
 
-@Schema({ versionKey: false, collection: 'users' })
+@Schema({
+    versionKey: false,
+    collection: 'users',
+    timestamps: {
+        createdAt: 'created_at',
+        updatedAt: 'updated_at',
+    },
+})
 export class UserDocument extends AbstractDocument {
-    @Prop()
+    @Prop({ required: true })
     email: string;
 
-    @Prop()
-    name: string;
+    @Prop({
+        type: String,
+        enum: Status,
+        default: Status.Active
+    })
+    status?: Status;
 
-    @Prop()
-    surname: string;
-
-    @Prop()
+    @Prop({ required: true })
     password: string;
 
-    @Prop({ type: String, enum: Gender })
-    gender: Gender;
-
-    @Prop({ type: String, default: null })
-    phone?: string | null;
-
-    @Prop({ type: String, default: null })
-    city?: string | null;
-
-    @Prop({ type: String, default: null })
-    address?: string | null;
-
+    @Prop({ type: Profile, required: true })
+    profile: Profile;
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserDocument);
