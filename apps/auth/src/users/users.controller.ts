@@ -7,6 +7,7 @@ import {CurrentUser} from "@app/common/decorators/current-user.decorator";
 import {UserDocument} from "@app/common/models/user.schema";
 import {ProfileDto} from "./dto/profile.dto";
 import {ChangeProfileDto} from "./dto/change-profile.dto";
+import {ChangePasswordDto} from "./dto/change-password.dto";
 
 @Controller('users')
 export class UsersController {
@@ -34,5 +35,14 @@ export class UsersController {
         @Body() changeProfileDto: ChangeProfileDto,
     ): Promise<ProfileDto>{
         return this.usersService.changeUserProfile(user._id.toString(), changeProfileDto);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Patch('change-password')
+    async changePassword(
+        @CurrentUser() user: UserDocument,
+        @Body() changePasswordDto: ChangePasswordDto,
+    ) {
+        return this.usersService.changeUserPassword(user._id.toString(), changePasswordDto, user);
     }
 }

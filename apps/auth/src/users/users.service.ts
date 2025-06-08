@@ -1,4 +1,4 @@
-import {Injectable, UnauthorizedException, UnprocessableEntityException} from '@nestjs/common';
+import {BadRequestException, Injectable, UnauthorizedException, UnprocessableEntityException} from '@nestjs/common';
 import {UsersRepository} from "./users.repository";
 import {CreateUserDto} from "./dto/create-user.dto";
 import * as bcrypt from "bcryptjs";
@@ -9,6 +9,9 @@ import {randomUUID} from "crypto";
 import {ConfigService} from "@nestjs/config";
 import {ProfileDto} from "./dto/profile.dto";
 import {ChangeProfileDto} from "./dto/change-profile.dto";
+import {ChangePasswordDto} from "./dto/change-password.dto";
+import {UserDocument} from "@app/common/models/user.schema";
+import {CurrentUser} from "@app/common/decorators/current-user.decorator";
 
 @Injectable()
 export class UsersService{
@@ -106,5 +109,34 @@ export class UsersService{
         );
 
         return updatedUser.profile as ProfileDto;
+    }
+
+    async changeUserPassword(
+        userId: string,
+        changePasswordDto: ChangePasswordDto,
+        @CurrentUser() user: UserDocument
+        ){
+
+            // Compare old password
+            const isMatch = await bcrypt.compare(changePasswordDto.oldPassword, user.password);
+            if (!isMatch) {
+                throw new BadRequestException('Old password is incorrect');
+            }
+
+            // Check if new password is different
+            const isSame = await bcrypt.compare(changePasswordDto.newPassword, user.password);
+            if (isSame) {
+                throw new BadRequestException('New password must be different from old password');
+            }
+
+            // Hash the new password
+            const hashedPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+
+            await this.usersRepository.findOneAndUpdate(
+                {_id: userId},
+                { $set: { password: hashedPassword } },
+            )
+
+            return {'msg': 'Password set successfully'};
     }
 }
