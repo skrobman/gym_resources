@@ -114,7 +114,7 @@ export class UsersService{
     async changeUserPassword(
         userId: string,
         changePasswordDto: ChangePasswordDto,
-        @CurrentUser() user: UserDocument
+        user: UserDocument
         ){
 
             // Compare old password
@@ -138,5 +138,25 @@ export class UsersService{
             )
 
             return {'msg': 'Password set successfully'};
+    }
+
+    async updateProfilePhoto(
+        userId: string,
+        file: Express.Multer.File
+    ) {
+        const uploadedObjectName:string = await this.uploadFile(file);
+
+        const preSignedUrl:string = await this.minioService.presignedGetObject(
+            this._bucketName,
+            uploadedObjectName,
+            24 * 60 * 60,
+        );
+
+        await this.usersRepository.findOneAndUpdate(
+            { _id: userId },
+            { $set: { 'profile.profile_image': preSignedUrl } },
+        )
+
+        return {"msg": "Profile photo updated successfully"};
     }
 }

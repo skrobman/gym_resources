@@ -38,11 +38,21 @@ export class UsersController {
     }
 
     @UseGuards(JwtAuthGuard)
-    @Patch('change-password')
+    @Patch('update-password')
     async changePassword(
         @CurrentUser() user: UserDocument,
         @Body() changePasswordDto: ChangePasswordDto,
     ) {
         return this.usersService.changeUserPassword(user._id.toString(), changePasswordDto, user);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @UseInterceptors(FileInterceptor('profile-photo'))
+    @Patch('update-photo')
+    async updateProfilePhoto(
+        @CurrentUser() user: UserDocument,
+        @UploadedFile() file: Express.Multer.File
+    ){
+        return this.usersService.updateProfilePhoto(user._id.toString(), file)
     }
 }
