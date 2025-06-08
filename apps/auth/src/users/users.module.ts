@@ -4,17 +4,19 @@ import { UsersController } from './users.controller';
 import {DatabaseModule} from "@app/common";
 import {UserDocument, UserSchema} from "@app/common/models/user.schema";
 import {UsersRepository} from "./users.repository";
-import {JwtStrategy} from "../strategies/jwt.strategy";
+import {UploadFileService} from "@app/common/services/upload-file.service";
+
+const UserFeature = DatabaseModule.forFeature([
+    { name: UserDocument.name, schema: UserSchema }
+]);
 
 @Module({
   imports: [
       DatabaseModule,
-      DatabaseModule.forFeature([
-        { name: UserDocument.name, schema: UserSchema}
-      ])
+      UserFeature
   ],
-  providers: [UsersService, UsersRepository],
+  providers: [UsersService, UsersRepository, UploadFileService],
   controllers: [UsersController],
-    exports: [UsersService]
+  exports: [UsersService, UserFeature]
 })
 export class UsersModule {}

@@ -4,7 +4,7 @@ import {
     IsStrongPassword, ValidateNested,
 } from "class-validator";
 import {Transform, Type} from "class-transformer";
-import {ProfileDto} from "./profile.dto";
+import {ProfileDto} from "../../profile/dto/profile.dto";
 import {BadRequestException} from "@nestjs/common";
 
 

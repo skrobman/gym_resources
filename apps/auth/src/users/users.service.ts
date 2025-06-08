@@ -5,13 +5,10 @@ import * as bcrypt from "bcryptjs";
 import {GetUserDto} from "./dto/get-user.dto";
 import {InjectMinio} from "@app/common/decorators/minio.decorator";
 import * as Minio from "minio";
-import {randomUUID} from "crypto";
-import {ConfigService} from "@nestjs/config";
-import {ProfileDto} from "./dto/profile.dto";
-import {ChangeProfileDto} from "./dto/change-profile.dto";
 import {ChangePasswordDto} from "./dto/change-password.dto";
 import {UserDocument} from "@app/common/models/user.schema";
-import {CurrentUser} from "@app/common/decorators/current-user.decorator";
+import {UploadFileService} from "@app/common/services/upload-file.service";
+import {ConfigService} from "@nestjs/config";
 
 @Injectable()
 export class UsersService{
@@ -20,24 +17,18 @@ export class UsersService{
     constructor(
         private readonly usersRepository: UsersRepository,
         @InjectMinio() private readonly minioService: Minio.Client,
+        private readonly uploadFileService: UploadFileService,
         private readonly configService: ConfigService,
     ) {
         this._bucketName = this.configService.getOrThrow<string>('MINIO_BUCKET');
-        if (!this._bucketName) {
-            throw new Error('Error with bucket name');
-        }
     }
 
     async create(createUserDto: CreateUserDto, file: Express.Multer.File) {
         await this.validateCreateUserDto(createUserDto);
 
-        const uploadedObjectName:string = await this.uploadFile(file);
+        const uploadedObjectName:string = await this.uploadFileService.uploadFile(file);
 
-        const preSignedUrl:string = await this.minioService.presignedGetObject(
-            this._bucketName,
-            uploadedObjectName,
-            24 * 60 * 60,
-        );
+        const preSignedUrl = await this.uploadFileService.getPresignedUrl(uploadedObjectName);
 
         return await this.usersRepository.create({
             email: createUserDto.email,
@@ -61,25 +52,6 @@ export class UsersService{
         }
     }
 
-    private async uploadFile(file: Express.Multer.File): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            const filename = `${randomUUID().toString()}-${file.originalname}`;
-            this.minioService.putObject(
-                this._bucketName,
-                filename,
-                file.buffer,
-                file.size,
-                (error, objInfo) => {
-                    if (error) {
-                        reject(error);
-                    } else {
-                        resolve(filename);
-                    }
-                },
-            );
-        });
-    }
-
     async verifyUser(email: string, password: string) {
         const user = await this.usersRepository.findOne({email: email});
         const passwordIsValid = await bcrypt.compare(password, user.password);
@@ -92,23 +64,6 @@ export class UsersService{
 
     async getUserProfile(getUserDto: GetUserDto) {
         return await this.usersRepository.findOne(getUserDto);
-    }
-
-    async changeUserProfile(
-        userId: string,
-        changeProfileDto: ChangeProfileDto,
-    ): Promise<ProfileDto> {
-        const setObj: Record<string, any> = {};
-        for (const [key, value] of Object.entries(changeProfileDto)) {
-            setObj[`profile.${key}`] = value;
-        }
-
-        const updatedUser = await this.usersRepository.findOneAndUpdate(
-            { _id: userId },
-            { $set: setObj }
-        );
-
-        return updatedUser.profile as ProfileDto;
     }
 
     async changeUserPassword(
@@ -138,25 +93,5 @@ export class UsersService{
             )
 
             return {'msg': 'Password set successfully'};
-    }
-
-    async updateProfilePhoto(
-        userId: string,
-        file: Express.Multer.File
-    ) {
-        const uploadedObjectName:string = await this.uploadFile(file);
-
-        const preSignedUrl:string = await this.minioService.presignedGetObject(
-            this._bucketName,
-            uploadedObjectName,
-            24 * 60 * 60,
-        );
-
-        await this.usersRepository.findOneAndUpdate(
-            { _id: userId },
-            { $set: { 'profile.profile_image': preSignedUrl } },
-        )
-
-        return {"msg": "Profile photo updated successfully"};
     }
 }

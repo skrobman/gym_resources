@@ -8,10 +8,12 @@ import {JwtModule} from "@nestjs/jwt";
 import {LocalStrategy} from "./strategies/local.strategy";
 import {JwtStrategy} from "./strategies/jwt.strategy";
 import {MinioModule} from "@app/common/minio/minio.module";
+import {ProfileModule} from "./profile/profile.module";
 
 @Module({
   imports: [
       UsersModule,
+      ProfileModule,
       ConfigModule.forRoot({
         isGlobal: true,
         envFilePath: `${process.cwd()}/apps/auth/.env`,
@@ -31,8 +33,7 @@ import {MinioModule} from "@app/common/minio/minio.module";
       }),
       inject: [ConfigService],
     }),
-    UsersModule,
-    MinioModule
+    MinioModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
